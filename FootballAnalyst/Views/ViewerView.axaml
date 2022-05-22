@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="FootballAnalyst.Views.ViewerView">
+
+	<Grid RowDefinitions="*, 50" ColumnDefinitions="*" >
+		<TabControl Grid.Row="0" Grid.Column="0" Items="{Binding Tables}">
+			<TabControl.ItemTemplate>
+				<DataTemplate>
+					<StackPanel Orientation="Horizontal">
+						<TextBlock Text="{Binding Name}"/>
+						<Button Content="x" Click="DeleteTab" IsEnabled="{Binding IsSubTable}"/>
+					</StackPanel>
+				</DataTemplate>
+			</TabControl.ItemTemplate>
+			<TabControl.ContentTemplate>
+				<DataTemplate>
+					<UserControl Content="{Binding TableView}"/>
+				</DataTemplate>
+			</TabControl.ContentTemplate>
+		</TabControl>
+		<DockPanel Grid.Row="1" Grid.Column="0">
+			<Button Classes="gridBtn" Content="Open Query Manager" Command="{Binding $parent[Window].DataContext.OpenQueryView}"/>
+			<Button Name="AddRowButton" Classes="gridBtn" Grid.Column="0" Content="+ Add Row"/>
+		</DockPanel>
+	</Grid>
+</UserControl>
