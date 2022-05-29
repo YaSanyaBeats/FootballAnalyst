@@ -5,8 +5,8 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="FootballAnalyst.Views.ViewerView">
 
-	<Grid RowDefinitions="*, 50" ColumnDefinitions="*" >
-		<TabControl Grid.Row="0" Grid.Column="0" Items="{Binding Tables}">
+	<Grid RowDefinitions="*, auto, 50" ColumnDefinitions="*, *, *" >
+		<TabControl Grid.Row="0" Grid.Column="0" Items="{Binding AllTables}" SelectionChanged="SelectedTabChanged" Grid.ColumnSpan="3">
 			<TabControl.ItemTemplate>
 				<DataTemplate>
 					<StackPanel Orientation="Horizontal">
@@ -21,9 +21,9 @@
 				</DataTemplate>
 			</TabControl.ContentTemplate>
 		</TabControl>
-		<DockPanel Grid.Row="1" Grid.Column="0">
-			<Button Classes="gridBtn" Content="Open Query Manager" Command="{Binding $parent[Window].DataContext.OpenQueryView}"/>
-			<Button Name="AddRowButton" Classes="gridBtn" Grid.Column="0" Content="+ Add Row"/>
-		</DockPanel>
+		<Button Background="#22A5F1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Classes="gridBtn" Content="Add Row" Command="{Binding AddItem}" IsVisible="{Binding CurrentTableIsSubtable}" Grid.Row="1" Grid.Column="0"/>
+		<Button Background="#22A5F1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Classes="gridBtn" Content="Delete Row" Command="{Binding DeleteItems}" IsVisible="{Binding CurrentTableIsSubtable}" Grid.Row="1" Grid.Column="1"/>
+		<Button Background="#22A5F1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Classes="gridBtn" Content="Save" Command="{Binding Save}" IsVisible="{Binding CurrentTableIsSubtable}" Grid.Row="1" Grid.Column="2"/>
+		<Button Background="#22A5F1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Classes="gridBtn" Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Content="Open Query Manager" Command="{Binding $parent[Window].DataContext.OpenQueryView}"/>
 	</Grid>
 </UserControl>

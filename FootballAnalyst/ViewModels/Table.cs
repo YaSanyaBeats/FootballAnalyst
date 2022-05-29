@@ -18,35 +18,31 @@ namespace FootballAnalyst.ViewModels
         private ViewModelBase tableView;
         public Table(string _name, bool _IsSubTable, ViewModelBase _tableView, ObservableCollection<string> _Properties)
         {
-            try
+            name = _name;
+            IsSubTable = _IsSubTable;
+            tableView = _tableView;
+            Properties = _Properties;
+            Rows = new List<Dictionary<string, object?>>();
+
+            dynamic table = TableView.GetTable();
+
+            if (table != null)
             {
-                name = _name;
-                IsSubTable = _IsSubTable;
-                tableView = _tableView;
-                Properties = _Properties;
-                TableValues = new Dictionary<string, List<object?>>();
-                var a = TableView.GetTable();
-                dynamic table = TableView.GetTable();
-                if (table != null)
+                Key = table[0].Key();
+                for (int j = 0; j < table.Count; j++)
                 {
+                    Dictionary<string, object?> tmp = new Dictionary<string, object?>();
                     foreach (string prop in Properties)
                     {
-                        TableValues.Add(prop, new List<object?>() { name + ": " + prop });
+                        tmp.Add(prop, table[j][prop]);
                     }
-                    for (int i = 0; i < TableValues.Count; i++)
-                    {
-                        foreach (string prop in Properties)
-                        {
-                            for (int j = 0; j < table.Count; j++)
-                            {
-                                TableValues[prop].Add(table[j][prop]);
-                            }
-                        }
-                    }
+                    Rows.Add(tmp);
                 }
             }
-            catch{
 
+            else if (IsSubTable)
+            {
+                Rows = TableView.GetRows();
             }
         }
 
@@ -62,6 +58,8 @@ namespace FootballAnalyst.ViewModels
             }
         }
 
+        public string Key { get; set; }
+
         public bool IsSubTable { get; }
 
         public ViewModelBase TableView
@@ -76,8 +74,18 @@ namespace FootballAnalyst.ViewModels
             }
         }
 
-        public Dictionary<string, List<object?>> TableValues { get; }
+        public List<Dictionary<string, object?>> Rows { get; }
 
         public ObservableCollection<string> Properties { get; set; }
+
+        public List<object>? GetRemovableItems()
+        {
+            return TableView.RemovableItems;
+        }
+
+        public void SetRemoveInProgress(bool value)
+        {
+            TableView.RemoveInProgress = value;
+        }
     }
 }

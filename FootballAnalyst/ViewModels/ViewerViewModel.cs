@@ -9,20 +9,22 @@ using FootballAnalyst.Models;
 using Microsoft.Data.Sqlite;
 using System.IO;
 using System;
+using Avalonia.Controls;
+using Microsoft.EntityFrameworkCore;
 
 namespace FootballAnalyst.ViewModels
 {
-
     public class ViewerViewModel : ViewModelBase
     {
-        private ObservableCollection<Table> tables;
-        private ObservableCollection<Country> countries;
-        private ObservableCollection<Match> matches;
-        private ObservableCollection<Player> players;
-        private ObservableCollection<Season> seasons;
-        private ObservableCollection<Team> teams;
-        private ObservableCollection<Tournament> tournaments;
-        private ObservableCollection<Table> requests;
+        private ObservableCollection<Table> m_tables;
+        private ObservableCollection<Table> m_allTables;
+        private ObservableCollection<Country> m_countryes;
+        private ObservableCollection<Match> m_matches;
+        private ObservableCollection<Player> m_players;
+        private ObservableCollection<Season> m_seasons;
+        private ObservableCollection<Team> m_teams;
+        private ObservableCollection<Tournament> m_tournaments;
+        private bool m_currentTableIsSubtable;
 
         private ObservableCollection<string> FindProperties(string entityName, List<string> properties)
         {
@@ -36,7 +38,19 @@ namespace FootballAnalyst.ViewModels
                         i++;
                         while (properties[i].IndexOf("(") != -1 && i < properties.Count())
                         {
-                            result.Add(properties[i].Remove(properties[i].IndexOf("(")));
+                            string property = properties[i].Remove(properties[i].IndexOf("("));
+                            if (entityName == "Player" && property == "Id")
+                                result.Add("IdTopPlayer");
+                            else if (entityName == "Country" && property == "Id")
+                                result.Add("IdCountry");
+                            else if (entityName == "Tournament" && property == "IdTournaments")
+                                result.Add("IdTournaments");
+                            else if (entityName == "Season" && property == "Id")
+                                result.Add("IdSeason");
+                            else if (entityName == "Matches" && property == "Id")
+                                result.Add("IdHomeTeam");
+                            else
+                                result.Add(property);
                             i++;
                         }
                         return result;
@@ -52,105 +66,235 @@ namespace FootballAnalyst.ViewModels
 
         public ViewerViewModel()
         {
-            tables = new ObservableCollection<Table>();
-            requests = new ObservableCollection<Table>();
-            var DataBase = new dataContext();
+            try
+            {
+                m_tables = new ObservableCollection<Table>();
+                DataBase = new dataContext();
 
-            string tableInfo = DataBase.Model.ToDebugString();
-            tableInfo = tableInfo.Replace(" ", "");
-            string[] splitTableInfo = tableInfo.Split("\r\n");
-            List<string> properties = new List<string>(splitTableInfo.Where(str => str.IndexOf("Entity") != -1 ||
-                                                        (str.IndexOf("(") != -1 && str.IndexOf("<") == -1) &&
-                                                        str.IndexOf("Navigation") == -1 && str.IndexOf("(Car)") == -1));
+                string tableInfo = DataBase.Model.ToDebugString();
+                tableInfo = tableInfo.Replace(" ", "");
+                string[] splitTableInfo = tableInfo.Split("\r\n");
+                List<string> properties = new List<string>(splitTableInfo.Where(str => str.IndexOf("Entity") != -1 ||
+                                                            (str.IndexOf("(") != -1 && str.IndexOf("<") == -1) &&
+                                                            str.IndexOf("Navigation") == -1 && str.IndexOf("(Car)") == -1));
 
+                DataBase.Countries.Load<Country>();
+                Countries = DataBase.Countries.Local.ToObservableCollection();
+                m_tables.Add(new Table("Country", false, new CountryTableViewModel(Countries), FindProperties("Country", properties)));
 
+                DataBase.Matches.Load<Match>();
+                Matches = DataBase.Matches.Local.ToObservableCollection();
+                m_tables.Add(new Table("Matches", false, new MatchTableViewModel(Matches), FindProperties("Match", properties)));
 
-            countries = new ObservableCollection<Country>(DataBase.Countries);
-            tables.Add(new Table("Countries", false, new CountryTableViewModel(countries), FindProperties("Countries", properties)));
+                DataBase.Players.Load<Player>();
+                Players = DataBase.Players.Local.ToObservableCollection();
+                m_tables.Add(new Table("Players", false, new PlayerTableViewModel(Players), FindProperties("Player", properties)));
 
-            matches = new ObservableCollection<Match>(DataBase.Matches);
-            tables.Add(new Table("Matches", false, new MatchTableViewModel(matches), FindProperties("Matches", properties)));
+                DataBase.Seasons.Load<Season>();
+                Seasons = DataBase.Seasons.Local.ToObservableCollection();
+                m_tables.Add(new Table("Seasons", false, new SeasonTableViewModel(Seasons), FindProperties("Season", properties)));
 
-            players = new ObservableCollection<Player>(DataBase.Players);
-            tables.Add(new Table("Players", false, new PlayerTableViewModel(players), FindProperties("Players", properties)));
+                DataBase.Teams.Load<Team>();
+                Teams = DataBase.Teams.Local.ToObservableCollection();
+                m_tables.Add(new Table("Teams", false, new TeamTableViewModel(Teams), FindProperties("Team", properties)));
 
-            tournaments = new ObservableCollection<Tournament>(DataBase.Tournaments);
-            tables.Add(new Table("Tournaments", false, new TournamentTableViewModel(tournaments), FindProperties("Tournaments", properties)));
+                DataBase.Tournaments.Load<Tournament>();
+                Tournaments = DataBase.Tournaments.Local.ToObservableCollection();
+                m_tables.Add(new Table("Tournaments", false, new TournamentTableViewModel(Tournaments), FindProperties("Tournament", properties)));
 
-            seasons = new ObservableCollection<Season>(DataBase.Seasons);
-            tables.Add(new Table("Seasons", false, new SeasonTableViewModel(seasons), FindProperties("Seasons", properties)));
+                AllTables = new ObservableCollection<Table>(Tables.ToList());
 
-            teams = new ObservableCollection<Team>(DataBase.Teams);
-            tables.Add(new Table("Teams", false, new TeamTableViewModel(teams), FindProperties("Team", properties)));
+                CurrentTableName = "Country";
+
+                CurrentTableIsSubtable = false;
+            }
+            catch
+            {
+
+            }
         }
-        public void AddRow()
+
+        public bool CurrentTableIsSubtable
         {
-            Countries.Add(new Country());
+            get => !m_currentTableIsSubtable;
+            set => this.RaiseAndSetIfChanged(ref m_currentTableIsSubtable, value);
         }
+        public string CurrentTableName { get; set; }
+        public dataContext DataBase { get; set; }
         public ObservableCollection<Table> Tables
         {
-            get => tables;
+            get => m_tables;
             set
             {
-                this.RaiseAndSetIfChanged(ref tables, value);
+                this.RaiseAndSetIfChanged(ref m_tables, value);
+            }
+        }
+        public ObservableCollection<Table> AllTables
+        {
+            get => m_allTables;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref m_allTables, value);
             }
         }
         public ObservableCollection<Country> Countries
         {
-            get => countries;
+            get => m_countryes;
             set
             {
-                this.RaiseAndSetIfChanged(ref countries, value);
+                this.RaiseAndSetIfChanged(ref m_countryes, value);
             }
         }
         public ObservableCollection<Match> Matches
         {
-            get => matches;
+            get => m_matches;
             set
             {
-                this.RaiseAndSetIfChanged(ref matches, value);
+                this.RaiseAndSetIfChanged(ref m_matches, value);
             }
         }
         public ObservableCollection<Player> Players
         {
-            get => players;
+            get => m_players;
             set
             {
-                this.RaiseAndSetIfChanged(ref players, value);
+                this.RaiseAndSetIfChanged(ref m_players, value);
             }
         }
         public ObservableCollection<Season> Seasons
         {
-            get => seasons;
+            get => m_seasons;
             set
             {
-                this.RaiseAndSetIfChanged(ref seasons, value);
+                this.RaiseAndSetIfChanged(ref m_seasons, value);
             }
         }
         public ObservableCollection<Team> Teams
         {
-            get => teams;
+            get => m_teams;
             set
             {
-                this.RaiseAndSetIfChanged(ref teams, value);
+                this.RaiseAndSetIfChanged(ref m_teams, value);
             }
         }
         public ObservableCollection<Tournament> Tournaments
         {
-            get => tournaments;
+            get => m_tournaments;
             set
             {
-                this.RaiseAndSetIfChanged(ref tournaments, value);
+                this.RaiseAndSetIfChanged(ref m_tournaments, value);
             }
         }
-        public ObservableCollection<Table> Requests
+
+        public void AddItem()
         {
-            get => requests;
-            set
+            switch (CurrentTableName)
             {
-                this.RaiseAndSetIfChanged(ref requests, value);
+                case "Country":
+                    {
+                        Countries.Add(new Country());
+                        break;
+                    }
+                case "Match":
+                    {
+                        Matches.Add(new Match());
+                        break;
+                    }
+                case "Player":
+                    {
+                        Players.Add(new Player());
+                        break;
+                    }
+                case "Season":
+                    {
+                        Seasons.Add(new Season());
+                        break;
+                    }
+                case "Teams":
+                    {
+                        Teams.Add(new Team());
+                        break;
+                    }
+                case "Tournament":
+                    {
+                        Tournaments.Add(new Tournament());
+                        break;
+                    }
             }
+        }
+        public void DeleteItems()
+        {
+            // Выбираем нужную таблицы
+            Table currentTable = Tables.Where(table => table.Name == CurrentTableName).ToList()[0];
+
+            // Получаем удаляемые элементы
+            List<object>? RemovableItems = currentTable.GetRemovableItems();
+
+            // Помечаем, что идет удаление, чтобы событие DataGrid'a на изменение выбранной строчки не срабатывало
+            currentTable.SetRemoveInProgress(true);
+
+            // Если список удаляемых элементов не пуст
+            if (RemovableItems != null && RemovableItems.Count != 0)
+            {
+
+                // Выбираем таблицу по имени и удаляем элементы
+                switch (CurrentTableName)
+                {
+                    case "Country":
+                        {
+                            for (int i = 0; i < RemovableItems.Count; i++)
+                            {
+                                Countries.Remove(RemovableItems[i] as Country);
+                            }
+                            break;
+                        }
+                    case "Match":
+                        {
+                            for (int i = 0; i < RemovableItems.Count; i++)
+                            {
+                                Matches.Remove(RemovableItems[i] as Match);
+                            }
+                            break;
+                        }
+                    case "Player":
+                        {
+                            for (int i = 0; i < RemovableItems.Count; i++)
+                            {
+                                Players.Remove(RemovableItems[i] as Player);
+                            }
+                            break;
+                        }
+                    case "Season":
+                        {
+                            for (int i = 0; i < RemovableItems.Count; i++)
+                            {
+                                Seasons.Remove(RemovableItems[i] as Season);
+                            }
+                            break;
+                        }
+                    case "Team":
+                        {
+                            for (int i = 0; i < RemovableItems.Count; i++)
+                            {
+                                Teams.Remove(RemovableItems[i] as Team);
+                            }
+                            break;
+                        }
+                    case "Tournament":
+                        {
+                            for (int i = 0; i < RemovableItems.Count; i++)
+                            {
+                                Tournaments.Remove(RemovableItems[i] as Tournament);
+                            }
+                            break;
+                        }
+                }
+            }
+            currentTable.SetRemoveInProgress(false);
+        }
+        public void Save()
+        {
+            DataBase.SaveChanges();
         }
     }
-
 }

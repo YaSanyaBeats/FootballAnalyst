@@ -5,6 +5,6 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="FootballAnalyst.Views.SeasonTableView">
 
-	<DataGrid Name="Table" Items="{Binding Table}" AutoGeneratingColumn ="DeleteNullColumn" AutoGenerateColumns="True"/>
+	<DataGrid Name="Table" Items="{Binding Table}" SelectionChanged="RowSelected" AutoGeneratingColumn ="DeleteNullColumn" AutoGenerateColumns="True"/>
 
 </UserControl>

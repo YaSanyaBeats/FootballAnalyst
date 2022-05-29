@@ -17,6 +17,25 @@ namespace FootballAnalyst.Models
         public string Name { get; set; } = null!;
         public string Gender { get; set; } = null!;
 
+        public object? this[string property]
+        {
+            get
+            {
+                switch (property)
+                {
+                    case "Id": return Id;
+                    case "IdCountry": return IdCountry;
+                    case "Name": return Name;
+                    case "Gender": return Gender;
+                }
+                return null;
+            }
+        }
+        public string Key()
+        {
+            return "Id";
+        }
+
         public virtual Country? IdCountryNavigation { get; set; }
         public virtual ICollection<Match> MatchIdAwayTeamNavigations { get; set; }
         public virtual ICollection<Match> MatchIdHomeTeamNavigations { get; set; }

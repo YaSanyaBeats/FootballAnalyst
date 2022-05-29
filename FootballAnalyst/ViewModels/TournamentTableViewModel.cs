@@ -18,6 +18,7 @@ namespace FootballAnalyst.ViewModels
         public TournamentTableViewModel(ObservableCollection<Tournament> _drivers)
         {
             Table = _drivers;
+            RemovableItems = new List<object>();
         }
 
         public ObservableCollection<Tournament> Table

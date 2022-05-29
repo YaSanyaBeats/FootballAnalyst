@@ -16,6 +16,24 @@ namespace FootballAnalyst.Models
         public string Name { get; set; } = null!;
         public string Flag { get; set; } = null!;
 
+        public object? this[string property]
+        {
+            get
+            {
+                switch (property)
+                {
+                    case "Id": return Id;
+                    case "Name": return Name;
+                    case "Flag": return Flag;
+                }
+                return null;
+            }
+        }
+        public string Key()
+        {
+            return "Id";
+        }
+
         public virtual ICollection<Player> Players { get; set; }
         public virtual ICollection<Team> Teams { get; set; }
         public virtual ICollection<Tournament> Tournaments { get; set; }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using ReactiveUI;
 using System.Reactive;
+using FootballAnalyst.Models;
 using Microsoft.Data.Sqlite;
 using System.IO;
 using System;
@@ -15,8 +16,8 @@ namespace FootballAnalyst.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
         private ViewModelBase page;
-        private ViewerViewModel viewerPage;
-        private QueryViewModel queryPage;
+        private ViewerViewModel dbViewer;
+        private QueryManagerViewModel queryManager;
 
         public ViewModelBase Page
         {
@@ -26,19 +27,22 @@ namespace FootballAnalyst.ViewModels
 
         public MainWindowViewModel()
         {
-            viewerPage = new ViewerViewModel();
-            queryPage = new QueryViewModel();
-            Page = viewerPage;
+            dbViewer = new ViewerViewModel();
+            queryManager = new QueryManagerViewModel(dbViewer, this);
+            Page = dbViewer;
         }
 
         public void OpenQueryView()
         {
-            Page = queryPage;
+            Page = queryManager;
+
+            // И удаляем из списка запросов нужные таблицы, если такие есть
+            queryManager.DeleteRequests();
         }
 
         public void OpenViewerView()
         {
-            Page = viewerPage;
+            Page = dbViewer;
         }
     }
 }

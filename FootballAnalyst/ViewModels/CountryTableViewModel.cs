@@ -18,6 +18,7 @@ namespace FootballAnalyst.ViewModels
         public CountryTableViewModel(ObservableCollection<Country> _drivers)
         {
             Table = _drivers;
+            RemovableItems = new List<object>();
         }
 
         public ObservableCollection<Country> Table

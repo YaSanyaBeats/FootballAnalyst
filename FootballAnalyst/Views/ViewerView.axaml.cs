@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Interactivity;
 using FootballAnalyst.ViewModels;
+using System;
 
 namespace FootballAnalyst.Views
 {
@@ -11,14 +12,6 @@ namespace FootballAnalyst.Views
         public ViewerView()
         {
             InitializeComponent();
-            this.FindControl<Button>("AddRowButton").Click += delegate
-            {
-                ViewerViewModel? context = this.DataContext as ViewerViewModel;
-                if (context != null)
-                {
-                    context.AddRow();
-                }
-            };
         }
 
         private void InitializeComponent()
@@ -33,14 +26,24 @@ namespace FootballAnalyst.Views
                 ViewerViewModel? context = this.DataContext as ViewerViewModel;
                 if (context != null)
                 {
-                    context.Tables.Remove(btn.DataContext as Table);
-                    context.Requests.Remove(btn.DataContext as Table);
+                    context.AllTables.Remove(btn.DataContext as Table);
+                    GC.Collect();
                 }
             }
         }
-        private void AddRow()
+        private void SelectedTabChanged(object control, SelectionChangedEventArgs args)
         {
-            int a = 1;
+            TabControl? tabControl = control as TabControl;
+            if (tabControl != null)
+            {
+                ViewerViewModel? context = this.DataContext as ViewerViewModel;
+                Table? table = tabControl.SelectedItem as Table;
+                if (context != null && table != null)
+                {
+                    context.CurrentTableName = table.Name;
+                    context.CurrentTableIsSubtable = table.IsSubTable;
+                }
+            }
         }
     }
 }
